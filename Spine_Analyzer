@@ -18,15 +18,9 @@ from matplotlib import mlab
 class spine_analizer:
     def __init__(self, img):
         self.img = cv.imread(img)
-        # cv.imwrite("OriginalImage.png", self.img)
         hsv = cv.cvtColor(self.img, cv.COLOR_BGR2GRAY)
-        # cv.imwrite("binary.png",hsv)
-        # self.angle = []
-        # self.neutral = []
-        # self.intersection_point = []
         self.contours, hierarchy = cv.findContours(hsv, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         self.contours = np.array(self.contours)
-        # self.contours = self.contours[0] if imutils.is_cv2() else self.contours[1]
         self.lengtn = len(self.contours)
         self.box = np.zeros((self.lengtn, 4, 2))
         self.center = np.zeros((self.lengtn, 2))
@@ -35,39 +29,22 @@ class spine_analizer:
             rect = cv.minAreaRect(cnt)
             box = cv.boxPoints(rect)
             center, wh, rot = rect
-            # box = np.int0(box)
-            # print(type(box),box.shape)
-            # center = np.int0(center)
             self.center[i] = center
-            # print(type(center),center.shape)
-            # rot = np.int0(rot)
-            # print(type(rot),rot.shape)
             """Прямоугольники у которых первоначальная координата находится в правом нижнем углу,у них высота больше,чем длина, соответственно таким образом переопределяем эти координаты,меняя их местами"""
             if (wh[1] >= wh[0]):
                 tmp0, tmp1, tmp2, tmp3 = box[0].copy(), box[1].copy(), box[2].copy(), box[3].copy()
-                # print ('--------------\n',i,box)
-                # print (tmp0, tmp1, tmp2, tmp3)
                 box[0], box[1], box[2], box[3] = tmp1, tmp2, tmp3, tmp0
                 print(box, tmp0)
             self.box[i] = box
 
     def calculate_angle(self):
-        # num = 0
         angles_list = []
         div_list = []
         for bx in self.box:
-            # cnt = cnts[i]
-            # rect = cv.minAreaRect(cnt)
-            # box = cv.boxPoints(rect)
-            # center, wh, rot = rect
-            # print(rot,box,type(box))
-            # box_transposed = box.transpose()
-            # y_box = box_transposed[1]
             first_point, second_point = bx[0], bx[3]
             down_side_vect = first_point - second_point
             norm = sqrt(down_side_vect[0] ** 2 + down_side_vect[1] ** 2)
             down_side_vect /= norm
-            # print('vect',down_side_vect,down_side_vect[1],down_side_vect[1]*180/pi)
             print('vect', down_side_vect[1] * 180 / pi)
             angles_list.append(down_side_vect[1] * 180 / pi)
         self.angle = np.array(angles_list)
@@ -77,27 +54,7 @@ class spine_analizer:
                        (np.float32(self.center[i][0] + 100), np.float32(self.center[i][1])), cv.FONT_HERSHEY_SIMPLEX, 1,
                        (0, 0, 255),
                        1)
-        # div_list_array = np.array(div_list)
-        # cv.imshow('drawKobb', self.img)
-        # pylab.xlabel("номер позвонка")
-        # pylab.ylabel("угол наклона")
-        # pylab.plot(range(self.lengtn), self.angle)
-        # pylab.show()
-        # pylab.xlabel("номер позвонка")
-        # pylab.ylabel("отклонение от центральной оси")
-        # pylab.plot(range(self.lengtn), div_list_array)
-        # pylab.show()
-        # cv.imwrite("newAngle.png", self.img)
-        # cv.waitKey()
-        # cv.destroyAllWindows()
-
-        ####for i in range(self.lengtn)
-
-    # print('fisrt second_num',first_point,inum_second_point)
-    # box = np.int0(box)
-    # center = np.int0(center)
-    # rot = np.int0(rot)
-
+    
     def calculate_neutral_kink(self):
         curr_angle = 0.
         pred_angle = 0.
@@ -125,7 +82,6 @@ class spine_analizer:
         print("CALCULATE SCOLIOSIS ANGLE KOBB")
         scoliosis_angle_list = []
         intersection_list = []
-        # self.intersection_point = np.zeros(len(self.kink), 2)
         for i in range(len(self.neutral) - 1):
             ilower = self.neutral[i]
             iupper = self.neutral[i + 1]
@@ -188,7 +144,6 @@ class spine_analizer:
         scoliosis_angle_list = []
         print("MYBOXCENTER=", self.center)
         for i in range(len(self.neutral) - 1):
-            # print('\n\nFERG i=', i, 'lower, upper = ', ilower, iupper)
             print("SELF NEUTRAL I=", self.neutral[i])
             print("SELF NEUTRAL I+1=", self.neutral[i + 1])
             ilower = self.neutral[i]
@@ -196,9 +151,7 @@ class spine_analizer:
             print('\n\nFERG i=', i, 'lower, upper = ', ilower, iupper)
             icenter = self.kink[i]
             print("ICENTER=", icenter)
-            # icenter = np.int0(icenter)
             print("True ICENTER=", icenter)
-            # vector center upper to
             dpoint1, dpoint2 = self.center[ilower][0], self.center[ilower][1]
             cpoint1, cpoint2 = self.center[icenter][0], self.center[icenter][1]
             upoint1, upoint2 = self.center[iupper][0], self.center[iupper][1]
@@ -210,8 +163,6 @@ class spine_analizer:
             vect_y = dpoint2 - cpoint2  # a2
             print("vect1=", vect_x, vect_y)
             """B"""
-            # vect_xx = upoint1 - cpoint1#b1
-            # vect_yy = upoint2 - cpoint2#b2
             vect_xx = upoint1 - cpoint1
             vect_yy = upoint2 - cpoint2
             print("vect2=", vect_xx, vect_yy)
@@ -241,7 +192,7 @@ class spine_analizer:
             print("SECOND RATE Kobb")
             K = 2
         elif KobbAngle >= 26 or KobbAngle <= 40:
-            print("THEERD RATE Kobb")
+            print("THIRD RATE Kobb")
             K = 3
         elif KobbAngle >= 41:
             print("FOURTH RATE Kobb")
@@ -254,7 +205,7 @@ class spine_analizer:
             print("SECOND RATE Ferg")
             F = 2
         elif FergAngle >= 26 or FergAngle <= 40:
-            print("THEERD RATE Ferg")
+            print("THIRD RATE Ferg")
             F = 3
         elif FergAngle >= 41:
             print("FOURTH RATE Ferg")
@@ -269,16 +220,6 @@ class spine_analizer:
         print("CALCULATE SCOLIOSIS SEVERITY=", KobbAngle, FergAngle)
 
     def draw(self):
-        # print(self.center)
-        # print(self.center[0][0])
-        # a = self.center[0][0]
-        # b = self.center[0][1]
-        # a,b = np.int0(a),np.int0(b)
-        # cv.line(self.img,(a,b),(a,b-1000),(76,76,76),2)
-        # for i in range(self.lengtn):
-        #     box = self.box[i]
-        #     box = np.int0(box)
-        #     center = self.center[i]
         for i in range(self.lengtn):
             box = self.box[i]
             box = np.int0(box)
@@ -289,7 +230,6 @@ class spine_analizer:
 
         cv.drawContours(self.img, [box], 0, (76, 76, 76), 2)
 
-        #     cv.drawContours(self.img, [box], 0, (76, 76, 75), 2)
         cv.imshow('Contours Image', self.img)
         cv.imwrite("Neutral.png", self.img)
         cv.waitKey()
@@ -324,7 +264,6 @@ class spine_analizer:
             print("iupper", upoint1)
             print("ilower", dpoint1)
             print("y_intersection", y_intersection)
-            # cv.line(self.img,(np.float32(upoint1),np.float32(y_intersection)),(np.float32(dpoint1),np.float32(y_intersection)),(0,0,255),3)
             cv.line(self.img, (np.float32(upoint1), np.float32(upoint2)),
                     (np.float32(x_intersection), np.float32(y_intersection)), (0, 0, 255), 2)
             cv.line(self.img, (np.float32(dpoint1), np.float32(dpoint2)),
